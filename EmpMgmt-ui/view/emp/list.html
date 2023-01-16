@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1">
+<title>Employee Details</title>
+
+<script
+	src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){
+	console.log("empId-- "+ sessionStorage.getItem("empId"));
+	
+
+		$.ajax('http://localhost:8080/employees', {
+			type : 'GET',
+			async : false,
+			success : function(responseData, status, xhr) {
+				console.log('responseData: ' + responseData);
+				var data = responseData;
+				var i;
+				for (i = 0; i < data.length; i++) {
+							
+					var dName = "";
+					if(data[i].department != null){
+						dName = data[i].department.name;
+					}
+					$('#empList').append($('<tr>')
+.append($('<td>').append(data[i].id))
+.append($('<td>').append(data[i].name))
+.append($('<td>').append(data[i].salary))
+.append($('<td>').append(data[i].age))
+.append($('<td>').append(dName))
+.append($('<td>').append(data[i].emailId))
+.append($('<td>').append($('<div class="EDITPERMISSIONDIV">').append('<button class="EDITPERMISSIONDIV" onclick="editEmp('+data[i].id+');" type="button">Edit</button>')))
+.append($('<td>').append($('<div class="DELETEPERMISSIONDIV">').append('<button onclick="deleteEmp('+data[i].id+');" type="button">Delete</button>')))
+.append($('<td>').append($('<div class="CREATE_USERPERMISSIONDIV">').append(
+		(data[i].userCreated == true ? '<button onclick="editUser('+data[i].id+','+data[i].userCreated+');" >Edit User</button>' : '<button onclick="createUser('+data[i].id+');" type="button">Create User</button>'))))
+						  );
+					
+				}
+			},
+			error : function(jqXhr, textStatus, errorMessage) {
+				console.log('Error' + errorMessage);
+			}
+		});
+		
+		$(function(){
+			//$("div[id$='PERMISSIONDIV']").hide();
+			$("div[class$='PERMISSIONDIV']").hide();
+			
+		    $("#loggedInDiv").html(sessionStorage.getItem("empName")+'</br>'+sessionStorage.getItem("empDeptName"));
+		    
+		    
+		    $.ajax('http://localhost:8080/permissions/'+sessionStorage.getItem("empId"), {
+				type : 'GET',
+				success : function(responseData, status, xhr) {
+					$.each(responseData, function(key,val) {
+						//$("#"+val.value+"PERMISSIONDIV").show();
+						$("."+val.value+"PERMISSIONDIV").show();
+					});
+				},
+				error : function(jqXhr, textStatus, errorMessage) {
+					console.log('Error' + errorMessage);
+				}
+			});
+		})
+	
+})
+function editUser(empId, isUserCreated){
+    sessionStorage.setItem("empIdFromList", empId);
+    sessionStorage.setItem("isUserCreated", isUserCreated);
+	window.location.assign("createUser.html");
+	  
+}
+function createUser(empId) {
+    sessionStorage.setItem("empIdFromList", empId);
+    sessionStorage.setItem("isUserCreated", false);
+	window.location.assign("createUser.html");
+	  
+	}
+
+
+function addEmp(){
+	console.log("in add page fn")
+    sessionStorage.setItem("empIdFromList", "");
+	window.location.assign("addEdit.html")
+	
+}
+function editEmp(id) {
+	console.log("in add edit");
+	console.log(id);
+    sessionStorage.setItem("empIdFromList", id);
+    window.location.assign("addEdit.html");
+  
+}
+
+function deleteEmp(id) {
+	$.ajax({
+		url:'http://localhost:8080/employees/'+id,
+		type:'delete',
+		success:function(){
+			alert('Employee record has been deleted!');
+			window.location.reload();
+		},
+		error : function(jqXhr, textStatus, errorMessage) {
+			console.log('Error' + errorMessage);
+		}
+	})
+	}
+function logout(){
+ 	window.location.href='D:/Eclipse Workspace made/EmpMgmt-ui/view/login.html';
+	//return false;
+
+}
+	
+
+</script>
+<style>
+body {
+  background-color: cornsilk;
+}
+table {
+  width: 65%;
+  background-color: white;
+  border-collapse: collapse;
+  margin-left:250px
+}
+table, th, td {
+	border: 2px solid black;
+}
+h3{
+margin-left:250px
+}
+#addBtn{
+margin-left:1000px
+}
+</style>
+</head>
+<body >
+	<h2>
+	<div id="loggedInDiv">
+	</div>
+	</h2>
+	
+	<input type="button" onclick="logout()" value="Logout" /><br>
+	
+	<div>	
+	<div  class="ADDPERMISSIONDIV">
+	<input onclick="addEmp()" id="addBtn" type="button" name="edit" value="ADD" /><br>
+	</div>
+	
+	<h3 >Employees List:</h3>
+	<table id="empList">
+		<tr>
+			<th>Id</th>
+			<th>Name</th>
+			<th>Salary</th>
+			<th>Age</th>
+			<th>Department</th>
+			<th>Email Id</th>
+			<th>Action</th>
+			<th>Action</th>
+			<th>Action</th>
+		</tr>
+		<tr>
+
+		</tr>
+	</table>
+	</div>
+	<div id="divContainer"></div>
+</body>
+</html>

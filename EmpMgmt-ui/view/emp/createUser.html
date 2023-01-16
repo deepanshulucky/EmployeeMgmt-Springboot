@@ -1,0 +1,160 @@
+ <!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1">
+<title>Insert title here</title>
+<script type="text/javascript"	
+src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+<script>
+function createUser(){
+	var userData={
+			 userName: $("#userName").val(),
+			 //userPassword: "PASS",
+			 empId: sessionStorage.getItem("empIdFromList")
+		 };
+	 console.log("user data value ="+JSON.stringify(userData));
+	 
+	 if(sessionStorage.getItem("isUserCreated") == false){
+		 $.ajax({
+			 url:'http://localhost:8080/createUser',
+			 type:'POST',
+			 data: JSON.stringify(userData),
+			 //data: userData,
+			 contentType: 'application/json',
+			 //dataType: 'json',
+			 
+			 success:function(){
+				 alert(userData.userName +" Added Successfully!")
+				 
+				 //window.location.assign('list.html');
+			 },
+		 error : function(jqXhr, textStatus, errorMessage) {
+				console.log('Error:' + errorMessage+ ' createuser ka error');
+			}	
+		 })
+	 }
+	 
+	 var userPermissions =[];
+	 $('input[name="permission"]:checked').each(function() {
+			 userPermissions.push($(this).val());
+	 }); 
+	 console.log(userPermissions);
+	 userPermissionData = {
+			 userName : $("#userName").val(),
+			 permissionId : userPermissions
+	 };
+	 if(userPermissions != null && $("#userName").val() != ""){
+		 $.ajax({
+			 url:'http://localhost:8080/createUserPermissions',
+			 type:'POST',
+			 data: JSON.stringify(userPermissionData),
+			 contentType: 'application/json',
+			 async : false,
+			 success:function(){
+				 alert(userPermissionData.permissionId +" Added Successfully!")
+				 //window.location.assign('list.html');
+			 },
+		 error : function(jqXhr, textStatus, errorMessage) {
+				console.log('Error:' + errorMessage+ ' createUserPermissions ka error h');
+			}	
+		 })
+	 }
+	 
+	 //sessionStorage.setItem("empIdFromList") = "";
+	window.location.assign('list.html');
+}
+
+function cancel(){
+	window.location.assign('list.html');
+	sessionStorage.setItem("empIdFromList") = "";
+	return false;
+}
+
+$(document).ready(function(){
+	console.log("empIdFromList-- "+ sessionStorage.getItem("empIdFromList"));
+	
+	$.ajax('http://localhost:8080/employees/'+sessionStorage.getItem("empIdFromList"), {
+		type : 'GET',
+		success : function(responseData, status, xhr) {
+			if(responseData.emailId != null){
+				$("#userName").val(responseData.emailId);
+			}else{
+				alert("Please provide Email Id of the employee first!");
+			}
+		},
+		error : function(jqXhr, textStatus, errorMessage) {
+			console.log('Error' + errorMessage);
+		}
+	});
+	$.ajax('http://localhost:8080/permissions', {
+		type : 'GET',
+		//async : false,
+		success : function(responseData, status, xhr) {
+			var i;
+			for( i =0; i < responseData.length; i++) {
+				$("#checkboxDiv").append(
+						'</br><input type="checkbox" id="'+responseData[i].value+'" name="permission" value="'+responseData[i].key +'">'+responseData[i].value
+				);
+			}
+			if(sessionStorage.getItem("isUserCreated") ){
+				$.ajax('http://localhost:8080/permissions/'+sessionStorage.getItem("empIdFromList"), {
+					type : 'GET',
+					//async : false,
+					success : function(responseData, status, xhr) {
+						//userPermissions = responseData; 
+						console.log('ulalalalalala: ' +responseData);
+						for(var i =0; i < responseData.length; i++) {
+							$("#"+responseData[i].value).attr("checked", "checked");
+						}
+						//$('input[type="checkbox"]').attr("checked", "checked");
+					},
+					error : function(jqXhr, textStatus, errorMessage) {
+						console.log('Error' + errorMessage);
+					}
+				});
+			}
+		},
+		error : function(jqXhr, textStatus, errorMessage) {
+			console.log('Error' + errorMessage);
+		}
+	});
+	
+	//var userPermissions ;
+	
+	//console.log(userPermissions+"  kaboaoaoa");
+
+	
+	
+	
+	
+
+})
+
+</script>
+<style>
+form{
+margin:100px 20px 20px 0 ;
+  margin-left:400px;
+padding: 15px;
+}
+#cancelBtn{
+  margin-left:130px;
+}
+
+</style>
+</head>
+<body>
+	<form action="login" method="post">
+		
+		User name: <input id="userName" type="text" 
+			value="" readonly="" /><br>
+		<br>
+		<div id="checkboxDiv">
+		</div>
+		<br>
+		<button onclick="createUser()" type="button">Submit</button>
+		<button id="cancelBtn" type="button" onclick="cancel()">Cancel</button>
+	</form>
+
+</body>
+</html>
